@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -13,12 +14,12 @@ type MockUserRepository struct {
 	mock.Mock
 }
 
-func (mock *MockUserRepository) CreateUser(username, password string) error {
+func (mock *MockUserRepository) CreateUser(ctx context.Context, username, password string) error {
 	args := mock.Called(username, password)
 	return args.Error(0)
 }
 
-func (mock *MockUserRepository) GetUserByUsername(name string) (string, error) {
+func (mock *MockUserRepository) GetUserByUsername(ctx context.Context, name string) (string, error) {
 	args := mock.Called(name)
 	return args.String(0), args.Error(1)
 }

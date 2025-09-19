@@ -1,11 +1,9 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -16,10 +14,6 @@ func secretHandler(w http.ResponseWriter, r *http.Request) {
 
 func middelwareHandler(next http.HandlerFunc, jwtKey string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-		defer cancel()
-
-		r = r.WithContext(ctx)
 
 		tokenStr := r.Header.Get("Authorization")
 

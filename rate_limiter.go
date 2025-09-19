@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"sort"
 	"sync"
 	"time"
 )
@@ -26,26 +27,31 @@ func (rl *RateLimiter) Allow(ip string) bool {
 	defer rl.mu.Unlock()
 
 	now := time.Now()
+	windowStart := now.Add(-rl.window)
 
-	rl.requests[ip] = rl.cleanup(rl.requests[ip], now)
+	// Получаем таймстемпы для IP
+	timestamps, exists := rl.requests[ip]
+	if !exists {
+		timestamps = []time.Time{}
+	}
 
-	if len(rl.requests[ip]) >= rl.maxRequests {
+	// Находим индекс первого таймстемпа, который ещё в окне
+	// (все таймстемпы после этого индекса актуальны)
+	firstValidIndex := sort.Search(len(timestamps), func(i int) bool {
+		return timestamps[i].After(windowStart)
+	})
+	validTimestamps := timestamps[firstValidIndex:]
+
+	// Проверяем лимит
+	if len(validTimestamps) >= rl.maxRequests {
 		return false
 	}
 
-	rl.requests[ip] = append(rl.requests[ip], now)
+	// Разрешаем запрос, добавляем текущую метку и сохраняем только актуальные
+	validTimestamps = append(validTimestamps, now)
+	rl.requests[ip] = validTimestamps // Сохраняем уже очищенный срез
+
 	return true
-}
-
-func (rl *RateLimiter) cleanup(request []time.Time, now time.Time) []time.Time {
-	var cleaned []time.Time
-	for _, t := range request {
-		if now.Sub(t) <= rl.window {
-			cleaned = append(cleaned, t)
-		}
-	}
-
-	return cleaned
 }
 
 func RateLimitMiddleware(limiter *RateLimiter, next http.HandlerFunc) http.HandlerFunc {

@@ -1,3 +1,7 @@
 2025/09/19 09:01:05 DB Initialize error
 2025/09/19 09:02:49 DB Initialize error
 2025/09/19 09:03:30 DB Initialize error
+2025/09/19 13:58:34 Access attempt from [::1]:65058 to /secret
+2025/09/19 13:58:34 User logged in
+2025/09/19 13:58:35 Access attempt from [::1]:65058 to /secret
+2025/09/19 13:58:35 User logged in

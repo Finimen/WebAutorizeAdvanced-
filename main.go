@@ -31,7 +31,7 @@ func getKey() string {
 	return "secretKey"
 }
 
-func startAutoriz(db *sql.DB, limiter *RateLimiter) {
+func startAuth(db *sql.DB, limiter *RateLimiter) {
 	var userRepository = SQLRepository{
 		bd: db,
 	}
@@ -61,8 +61,10 @@ func main() {
 	config := DefaultConfig()
 	limiter := NewRateLimiter(config.RateLimit, config.RateWindow)
 
-	server := NewSaver()
-	server.Start()
+	saver := NewSaver()
+	saver.Start()
+
+	defer saver.Stop()
 
 	var db, err = initDB(&config)
 
@@ -71,7 +73,7 @@ func main() {
 		return
 	}
 
-	startAutoriz(db, limiter)
+	startAuth(db, limiter)
 
 	fmt.Println("Server started on http://localhost:8888")
 	log.Fatal(http.ListenAndServe(":8888", nil))
