@@ -40,8 +40,8 @@ func startAutoriz(db *sql.DB) {
 	var key = getKey()
 
 	var loginHandler = LoginHandler{
-		Repo:   userRepository,
-		Hasher: hasher,
+		Repo:   &userRepository,
+		Hasher: &hasher,
 		JwtKey: []byte(key),
 	}
 

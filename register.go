@@ -9,6 +9,7 @@ import (
 
 type IPasswordHasher interface {
 	GenerateFromPassword(password []byte, cost int) ([]byte, error)
+	CompareHashAndPassword([]byte, []byte) error
 }
 
 type User struct {

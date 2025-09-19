@@ -32,6 +32,11 @@ func (mock *MockPasswordHasher) GenerateFromPassword(password []byte, cost int) 
 	return args.Get(0).([]byte), args.Error(1)
 }
 
+func (mock *MockPasswordHasher) CompareHashAndPassword(stored []byte, other []byte) error {
+	args := mock.Called(stored, other)
+	return args.Error(0)
+}
+
 func createTestRequest(method, url string, body interface{}) *http.Request {
 	var buf bytes.Buffer
 	if body != nil {

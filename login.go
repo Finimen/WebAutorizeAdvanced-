@@ -9,8 +9,8 @@ import (
 )
 
 type LoginHandler struct {
-	Repo   SQLRepository
-	Hasher BcryptHasher
+	Repo   IRepository
+	Hasher IPasswordHasher
 	JwtKey []byte
 }
 
@@ -22,6 +22,11 @@ func (l *LoginHandler) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	var user User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	if user.Username == "" || user.Password == "" {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}

@@ -1,10 +1,12 @@
 package main
 
 import (
+	"errors"
 	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -28,6 +30,42 @@ func TestRegisterHandler_TableDriven(t *testing.T) {
 			},
 			expectedCode: http.StatusOK,
 			expectedBody: "User registrated successfuly",
+		},
+		{
+			name: "empty username",
+			requestBody: map[string]interface{}{
+				"username": "",
+				"password": "password123",
+			},
+			setupMocks: func(mur *MockUserRepository, mph *MockPasswordHasher) {
+			},
+			expectedCode: http.StatusBadRequest,
+			expectedBody: "Invalid input",
+		},
+		{
+			name: "empty password",
+			requestBody: map[string]interface{}{
+				"username": "testuser",
+				"password": "",
+			},
+			setupMocks:   func(mockRepo *MockUserRepository, mockHasher *MockPasswordHasher) {},
+			expectedCode: http.StatusBadRequest,
+			expectedBody: "Invalid input",
+		},
+		{
+			name: "username already exists",
+			requestBody: map[string]interface{}{
+				"username": "existinguser",
+				"password": "password123",
+			},
+			setupMocks: func(mockRepo *MockUserRepository, mockHasher *MockPasswordHasher) {
+				mockHasher.On("GenerateFromPassword", mock.Anything, mock.Anything).
+					Return([]byte("hashed_password"), nil)
+				mockRepo.On("CreateUser", "existinguser", "hashed_password").
+					Return(errors.New("ErrUserExists"))
+			},
+			expectedCode: http.StatusBadRequest,
+			expectedBody: "Username already exist",
 		},
 	}
 
