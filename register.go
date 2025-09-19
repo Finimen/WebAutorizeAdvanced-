@@ -40,6 +40,8 @@ type RegisterHandler struct {
 }
 
 func (h *RegisterHandler) registerHandler(w http.ResponseWriter, r *http.Request) {
+	cxt := r.Context()
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Use post", http.StatusMethodNotAllowed)
 		return
@@ -62,7 +64,7 @@ func (h *RegisterHandler) registerHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = h.UserRepo.CreateUser(user.Username, string(hashedPassword))
+	err = h.UserRepo.CreateUser(cxt, user.Username, string(hashedPassword))
 	if err != nil {
 		http.Error(w, "Username already exist", http.StatusBadRequest)
 		return

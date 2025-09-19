@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auth System</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 400px; margin: 50px auto; }
+        .form { margin-bottom: 20px; padding: 20px; border: 1px solid #ddd; }
+        input { display: block; width: 100%; margin: 10px 0; padding: 8px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; }
+    </style>
+</head>
+<body>
+    <div class="form">
+        <h2>Register</h2>
+        <input type="text" id="regUsername" placeholder="Username">
+        <input type="password" id="regPassword" placeholder="Password">
+        <button onclick="register()">Register</button>
+    </div>
+
+    <div class="form">
+        <h2>Login</h2>
+        <input type="text" id="loginUsername" placeholder="Username">
+        <input type="password" id="loginPassword" placeholder="Password">
+        <button onclick="login()">Login</button>
+    </div>
+
+    <div class="form">
+        <h2>Secret Data</h2>
+        <button onclick="getSecret()">Get Secret</button>
+        <p id="secretResult"></p>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8888';
+        let token = '';
+
+        async function register() {
+            const response = await fetch(`${API_URL}/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: document.getElementById('regUsername').value,
+                    password: document.getElementById('regPassword').value
+                })
+            });
+            alert(await response.text());
+        }
+
+        async function login() {
+            const response = await fetch(`${API_URL}/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: document.getElementById('loginUsername').value,
+                    password: document.getElementById('loginPassword').value
+                })
+            });
+            
+            if (response.ok) {
+                token = await response.text();
+                alert('Login successful! Token saved.');
+            } else {
+                alert('Login failed');
+            }
+        }
+
+        async function getSecret() {
+            if (!token) {
+                alert('Please login first');
+                return;
+            }
+
+            const response = await fetch(`${API_URL}/secret`, {
+                headers: { 'Authorization': token }
+            });
+            
+            document.getElementById('secretResult').textContent = 
+                await response.text();
+        }
+    </script>
+</body>
+</html>

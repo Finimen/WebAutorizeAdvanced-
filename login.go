@@ -15,6 +15,8 @@ type LoginHandler struct {
 }
 
 func (l *LoginHandler) loginHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Use post", http.StatusMethodNotAllowed)
 		return
@@ -31,7 +33,7 @@ func (l *LoginHandler) loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	storedPassword, err := l.Repo.GetUserByUsername(user.Username)
+	storedPassword, err := l.Repo.GetUserByUsername(ctx, user.Username)
 	if err != nil {
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return

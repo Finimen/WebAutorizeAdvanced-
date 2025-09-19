@@ -9,8 +9,8 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-func initDB() (*sql.DB, error) {
-	var db, err = sql.Open("sqlite", "./users.db")
+func initDB(config *Config) (*sql.DB, error) {
+	var db, err = sql.Open("sqlite", config.DBPath)
 
 	if err != nil {
 		return nil, err
@@ -50,6 +50,8 @@ func startAutoriz(db *sql.DB, limiter *RateLimiter) {
 		Hasher:   &hasher,
 	}
 
+	fs := http.FileServer(http.Dir("./static"))
+	http.Handle("/", fs)
 	http.HandleFunc("/login", RateLimitMiddleware(limiter, loginHandler.loginHandler))
 	http.HandleFunc("/register", RateLimitMiddleware(limiter, registerHandler.registerHandler))
 	http.HandleFunc("/secret", middelwareHandler(secretHandler, key))
@@ -62,7 +64,7 @@ func main() {
 	server := NewSaver()
 	server.Start()
 
-	var db, err = initDB()
+	var db, err = initDB(&config)
 
 	if err != nil {
 		log.Fatal("DB Initialize error")
