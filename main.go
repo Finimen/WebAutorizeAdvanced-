@@ -5,24 +5,30 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	_ "modernc.org/sqlite"
 )
 
 func initDB() (*sql.DB, error) {
-	var db, err = sql.Open("sqlite", "/.users.db")
+	var db, err = sql.Open("sqlite", "./users.db")
 
 	if err != nil {
 		return nil, err
 	}
 
 	createTable := `
-	CREATE TABLE IF NOT EXIST users (
+	CREATE TABLE IF NOT EXISTS users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		username TEXT UNQUE NOT NULL,
+		username TEXT UNIQUE NOT NULL,
 		password TEXT NOT NULL)`
 
 	_, err = db.Exec(createTable)
 
 	return db, err
+}
+
+func getKey() string {
+	return "secretKey"
 }
 
 func startAutoriz(db *sql.DB) {
@@ -31,11 +37,12 @@ func startAutoriz(db *sql.DB) {
 	}
 
 	var hasher = BcryptHasher{}
+	var key = getKey()
 
 	var loginHandler = LoginHandler{
 		Repo:   userRepository,
 		Hasher: hasher,
-		JwtKey: []byte("secretKey"),
+		JwtKey: []byte(key),
 	}
 
 	var registerHandler = RegisterHandler{
@@ -45,7 +52,7 @@ func startAutoriz(db *sql.DB) {
 
 	http.HandleFunc("/login", loginHandler.loginHandler)
 	http.HandleFunc("/register", registerHandler.registerHandler)
-	http.HandleFunc("/secret", MiddelwareHandler)
+	http.HandleFunc("/secret", middelwareHandler(secretHandler, key))
 }
 
 func main() {
@@ -54,12 +61,12 @@ func main() {
 
 	var db, err = initDB()
 
-	startAutoriz(db)
-
 	if err != nil {
 		log.Fatal("DB Initialize error")
 		return
 	}
+
+	startAutoriz(db)
 
 	fmt.Println("Server started on http://localhost:8888")
 	log.Fatal(http.ListenAndServe(":8888", nil))

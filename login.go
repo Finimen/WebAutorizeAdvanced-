@@ -32,14 +32,13 @@ func (l *LoginHandler) loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var compared bool
-	err, compared = l.Hasher.CompareHashAndPassword([]byte(storedPassword), []byte(user.Password))
-	if err != nil || !compared {
+	err = l.Hasher.CompareHashAndPassword([]byte(storedPassword), []byte(user.Password))
+	if err != nil {
 		http.Error(w, "Invalid creditans", http.StatusUnauthorized)
 		return
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims{
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username": user.Username,
 		"exp":      time.Now().Add(time.Hour).Unix(),
 	})
@@ -47,7 +46,7 @@ func (l *LoginHandler) loginHandler(w http.ResponseWriter, r *http.Request) {
 	tokenstring, err := token.SignedString(l.JwtKey)
 
 	if err != nil {
-		http.Error(w, "Token henerating error", http.StatusInternalServerError)
+		http.Error(w, "Token generating error", http.StatusInternalServerError)
 		return
 	}
 
