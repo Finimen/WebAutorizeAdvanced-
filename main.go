@@ -1,10 +1,18 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+	"net/http"
+)
 
 func main() {
 	server := NewSaver()
-	err := server.Start()
+	server.Start()
 
-	fmt.Print("TEst", server, err)
+	http.HandleFunc("/login", loginHandler)
+	http.HandleFunc("/register", register)
+
+	fmt.Println("Server started on http://localhost:8888")
+	log.Fatal(http.ListenAndServe(":8888", nil))
 }
