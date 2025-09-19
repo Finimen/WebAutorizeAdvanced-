@@ -6,10 +6,10 @@ type SQLRepository struct {
 	bd *sql.DB
 }
 
-func GetUserByUsername(name string) (hashedPassword string, err error) {
+func (r *SQLRepository) GetUserByUsername(name string) (hashedPassword string, err error) {
 	return "", nil
 }
 
-func CreateUser(name, hashedPassword string) error {
+func (r *SQLRepository) CreateUser(name, hashedPassword string) error {
 	return nil
 }

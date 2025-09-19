@@ -1,10 +1,57 @@
 package main
 
-import "net/http"
+import (
+	"encoding/json"
+	"net/http"
 
-func register(w http.ResponseWriter, r *http.Request) {
+	"golang.org/x/crypto/bcrypt"
+)
+
+type User struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type BcryptHasher struct {
+}
+
+func (b *BcryptHasher) GenerateFromPassword(password []byte, cost int) ([]byte, error) {
+	return bcrypt.GenerateFromPassword(password, cost)
+}
+
+type RegisterHandler struct {
+	UserRepo SQLRepository
+	Hasher   BcryptHasher
+}
+
+func (h *RegisterHandler) registerHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Use post", http.StatusBadRequest)
+		http.Error(w, "Use post", http.StatusMethodNotAllowed)
 		return
 	}
+
+	var user User
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	if user.Username == "" || user.Password == "" {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	hashedPassword, err := h.Hasher.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		http.Error(w, "Hashing password error", http.StatusInternalServerError)
+		return
+	}
+
+	err = h.UserRepo.CreateUser(user.Username, string(hashedPassword))
+	if err != nil {
+		http.Error(w, "Username already exist", http.StatusBadRequest)
+		return
+	}
+
+	w.Write([]byte("User registrated successfuly"))
 }
