@@ -31,7 +31,7 @@ func getKey() string {
 	return "secretKey"
 }
 
-func startAutoriz(db *sql.DB) {
+func startAutoriz(db *sql.DB, limiter *RateLimiter) {
 	var userRepository = SQLRepository{
 		bd: db,
 	}
@@ -50,12 +50,15 @@ func startAutoriz(db *sql.DB) {
 		Hasher:   &hasher,
 	}
 
-	http.HandleFunc("/login", loginHandler.loginHandler)
-	http.HandleFunc("/register", registerHandler.registerHandler)
+	http.HandleFunc("/login", RateLimitMiddleware(limiter, loginHandler.loginHandler))
+	http.HandleFunc("/register", RateLimitMiddleware(limiter, registerHandler.registerHandler))
 	http.HandleFunc("/secret", middelwareHandler(secretHandler, key))
 }
 
 func main() {
+	config := DefaultConfig()
+	limiter := NewRateLimiter(config.RateLimit, config.RateWindow)
+
 	server := NewSaver()
 	server.Start()
 
@@ -66,7 +69,7 @@ func main() {
 		return
 	}
 
-	startAutoriz(db)
+	startAutoriz(db, limiter)
 
 	fmt.Println("Server started on http://localhost:8888")
 	log.Fatal(http.ListenAndServe(":8888", nil))

@@ -16,7 +16,10 @@ func middelwareHandler(next http.HandlerFunc, jwtKey string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tokenStr := r.Header.Get("Authorization")
 
+		log.Printf("Access attempt from %s to %s", getClientIP(r), r.URL.Path)
+
 		if tokenStr == "" {
+			log.Printf("Missing token from %s", getClientIP(r))
 			http.Error(w, "Missing token", http.StatusUnauthorized)
 			return
 		}
@@ -30,6 +33,7 @@ func middelwareHandler(next http.HandlerFunc, jwtKey string) http.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
+			log.Printf("Invalid token from %s: %v", getClientIP(r), err)
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
