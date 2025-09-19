@@ -25,23 +25,41 @@ func initDB() (*sql.DB, error) {
 	return db, err
 }
 
+func startAutoriz(db *sql.DB) {
+	var userRepository = SQLRepository{
+		bd: db,
+	}
+
+	var hasher = BcryptHasher{}
+
+	var loginHandler = LoginHandler{
+		Repo:   userRepository,
+		Hasher: hasher,
+		JwtKey: []byte("secretKey"),
+	}
+
+	var registerHandler = RegisterHandler{
+		UserRepo: userRepository,
+		Hasher:   hasher,
+	}
+
+	http.HandleFunc("/login", loginHandler.loginHandler)
+	http.HandleFunc("/register", registerHandler.registerHandler)
+	http.HandleFunc("/secret", MiddelwareHandler)
+}
+
 func main() {
 	server := NewSaver()
 	server.Start()
 
 	var db, err = initDB()
 
+	startAutoriz(db)
+
 	if err != nil {
 		log.Fatal("DB Initialize error")
 		return
 	}
-
-	var userRepository = SQLRepository{
-		bd: db,
-	}
-
-	http.HandleFunc("/login", loginHandler)
-	http.HandleFunc("/register", register)
 
 	fmt.Println("Server started on http://localhost:8888")
 	log.Fatal(http.ListenAndServe(":8888", nil))

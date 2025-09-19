@@ -19,6 +19,16 @@ func (b *BcryptHasher) GenerateFromPassword(password []byte, cost int) ([]byte, 
 	return bcrypt.GenerateFromPassword(password, cost)
 }
 
+func (b *BcryptHasher) CompareHashAndPassword(storedPaswsord []byte, userPassword []byte) (error, bool) {
+	err := bcrypt.CompareHashAndPassword(storedPaswsord, userPassword)
+
+	if err != nil {
+		return err, false
+	}
+
+	return nil, true
+}
+
 type RegisterHandler struct {
 	UserRepo SQLRepository
 	Hasher   BcryptHasher

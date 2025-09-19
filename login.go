@@ -1,7 +1,55 @@
 package main
 
-import "net/http"
+import (
+	"encoding/json"
+	"net/http"
+	"time"
 
-func loginHandler(w http.ResponseWriter, r *http.Request) {
+	"github.com/golang-jwt/jwt/v5"
+)
 
+type LoginHandler struct {
+	Repo   SQLRepository
+	Hasher BcryptHasher
+	JwtKey []byte
+}
+
+func (l *LoginHandler) loginHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Use post", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var user User
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	storedPassword, err := l.Repo.GetUserByUsername(user.Username)
+	if err != nil {
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		return
+	}
+
+	var compared bool
+	err, compared = l.Hasher.CompareHashAndPassword([]byte(storedPassword), []byte(user.Password))
+	if err != nil || !compared {
+		http.Error(w, "Invalid creditans", http.StatusUnauthorized)
+		return
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims{
+		"username": user.Username,
+		"exp":      time.Now().Add(time.Hour).Unix(),
+	})
+
+	tokenstring, err := token.SignedString(l.JwtKey)
+
+	if err != nil {
+		http.Error(w, "Token henerating error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Write([]byte(tokenstring))
 }
