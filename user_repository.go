@@ -2,6 +2,11 @@ package main
 
 import "database/sql"
 
+type IRepository interface {
+	GetUserByUsername(string) (string, error)
+	CreateUser(string, string) error
+}
+
 type SQLRepository struct {
 	bd *sql.DB
 }

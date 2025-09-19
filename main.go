@@ -46,8 +46,8 @@ func startAutoriz(db *sql.DB) {
 	}
 
 	var registerHandler = RegisterHandler{
-		UserRepo: userRepository,
-		Hasher:   hasher,
+		UserRepo: &userRepository,
+		Hasher:   &hasher,
 	}
 
 	http.HandleFunc("/login", loginHandler.loginHandler)

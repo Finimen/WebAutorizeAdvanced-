@@ -7,6 +7,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type IPasswordHasher interface {
+	GenerateFromPassword(password []byte, cost int) ([]byte, error)
+}
+
 type User struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
@@ -30,8 +34,8 @@ func (b *BcryptHasher) CompareHashAndPassword(storedPaswsord []byte, userPasswor
 }
 
 type RegisterHandler struct {
-	UserRepo SQLRepository
-	Hasher   BcryptHasher
+	UserRepo IRepository
+	Hasher   IPasswordHasher
 }
 
 func (h *RegisterHandler) registerHandler(w http.ResponseWriter, r *http.Request) {

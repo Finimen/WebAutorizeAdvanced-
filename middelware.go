@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"log"
 	"net/http"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -20,6 +22,10 @@ func middelwareHandler(next http.HandlerFunc, jwtKey string) http.HandlerFunc {
 		}
 
 		token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
+			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, errors.New("unexpected signing method")
+			}
+
 			return []byte(jwtKey), nil
 		})
 
@@ -28,6 +34,7 @@ func middelwareHandler(next http.HandlerFunc, jwtKey string) http.HandlerFunc {
 			return
 		}
 
+		log.Printf("User logged in")
 		next.ServeHTTP(w, r)
 	}
 }
